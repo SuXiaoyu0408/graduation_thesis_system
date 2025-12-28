@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>毕业论文管理系统 - 登录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #0f172a;
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input {
+            width: 100%;
+            border: solid 1.5px #cbd5e1;
+            border-radius: 0.75rem;
+            background: none;
+            padding: 1rem;
+            padding-right: 3rem;
+            font-size: 1rem;
+            color: #0f172a;
+            transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-label {
+            position: absolute;
+            left: 15px;
+            color: #64748b;
+            pointer-events: none;
+            transform: translateY(1rem);
+            transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input:focus,
+        .input:valid {
+            outline: none;
+            border: 1.5px solid #0f172a;
+        }
+
+        .input:focus~.user-label,
+        .input:valid~.user-label {
+            transform: translateY(-50%) scale(0.85);
+            background-color: #ffffff;
+            padding: 0 .4em;
+            color: #0f172a;
+            left: 12px;
+            font-weight: 600;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #0f172a;
+        }
+
+        .checkbox-container {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-container input {
+            display: none;
+        }
+
+        .checkbox-container svg {
+            overflow: visible;
+            height: 1.4em;
+            width: 1.4em;
+            margin-right: 8px;
+        }
+
+        .path {
+            fill: none;
+            stroke: #94a3b8;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+            stroke-dasharray: 241 9999999;
+            stroke-dashoffset: 0;
+        }
+
+        .checkbox-container input:checked~svg .path {
+            stroke: #0f172a;
+            stroke-dasharray: 70.5096664428711 9999999;
+            stroke-dashoffset: -262.2723388671875;
+        }
+
+        .hidden-form {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            color: #ffffff;
+            background-color: #0f172a;
+            font-weight: 700;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .link-text {
+            color: #334155;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            border-bottom: 1.5px solid transparent;
+            cursor: pointer;
+        }
+
+        .link-text:hover {
+            color: #020617;
+            border-bottom-color: #020617;
+        }
+
+        .captcha-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #f1f5f9;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            z-index: 10;
+        }
+
+        /* --- 顶部消息框样式 --- */
+        #topToast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #0f172a;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 200;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #topToast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* --- 遮罩反馈层 --- */
+        #statusOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .loader-wrapper {
+            width: 200px;
+            height: 60px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .loader-circle {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border-radius: 50%;
+            background-color: #0f172a;
+            left: 15%;
+            transform-origin: 50%;
+            animation: circleAnim .5s alternate infinite ease;
+        }
+
+        @keyframes circleAnim {
+            0% {
+                top: 60px;
+                height: 5px;
+                border-radius: 50px 50px 25px 25px;
+                transform: scaleX(1.7);
+            }
+
+            40% {
+                height: 20px;
+                border-radius: 50%;
+                transform: scaleX(1);
+            }
+
+            100% {
+                top: 0%;
+            }
+        }
+
+        .loader-circle:nth-child(2) {
+            left: 45%;
+            animation-delay: .2s;
+        }
+
+        .loader-circle:nth-child(3) {
+            left: auto;
+            right: 15%;
+            animation-delay: .3s;
+        }
+
+        .loader-shadow {
+            width: 20px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.15);
+            position: absolute;
+            top: 62px;
+            left: 15%;
+            filter: blur(1px);
+            animation: shadowAnim .5s alternate infinite ease;
+        }
+
+        @keyframes shadowAnim {
+            0% {
+                transform: scaleX(1.5);
+            }
+
+            40% {
+                transform: scaleX(1);
+                opacity: .7;
+            }
+
+            100% {
+                transform: scaleX(.2);
+                opacity: .4;
+            }
+        }
+
+        .loader-shadow:nth-child(4) {
+            left: 45%;
+            animation-delay: .2s;
+        }
+
+        .loader-shadow:nth-child(5) {
+            left: auto;
+            right: 15%;
+            animation-delay: .3s;
+        }
+
+        .status-text {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+        }
+
+        .status-icon {
+            display: none;
+            margin-bottom: 20px;
+            color: #059669;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 顶部提示 -->
+    <div id="topToast">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clip-rule="evenodd" />
+        </svg>
+        <span id="toastText">验证码已发送</span>
+    </div>
+
+    <!-- 遮罩反馈层 -->
+    <div id="statusOverlay">
+        <div id="animGroup" class="loader-wrapper">
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+            <div class="loader-shadow"></div>
+            <div class="loader-shadow"></div>
+            <div class="loader-shadow"></div>
+        </div>
+        <div id="successIcon" class="status-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div id="statusMsg" class="status-text">处理中...</div>
+    </div>
+
+    <div class="w-full max-w-md p-6">
+        <div class="glass-card p-10">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">毕业论文管理系统</h1>
+                <p class="text-slate-500 text-sm mt-3 font-medium" id="formSubtitle">请登录您的账号</p>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="loginForm" class="fade-in" novalidate>
+                <div class="input-group">
+                    <input required type="text" id="loginUser" autocomplete="off" class="input">
+                    <label class="user-label">用户名 / 手机号</label>
+                </div>
+                <div class="input-group">
+                    <input required type="password" id="loginPass" autocomplete="off" class="input">
+                    <label class="user-label">密码</label>
+                    <div class="password-toggle" onclick="togglePassword('loginPass')">
+                        <svg id="eye-loginPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L2 2m20 20L14.111 14.111" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-8">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="remember">
+                        <svg viewBox="0 0 64 64">
+                            <path
+                                d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16"
+                                pathLength="575.0541381835938" class="path"></path>
+                        </svg>
+                        <span class="text-sm text-slate-600 font-medium">记住我</span>
+                    </label>
+                    <a onclick="switchForm('forgot')" class="link-text text-sm">忘记密码？</a>
+                </div>
+                <button type="submit" class="btn-primary">立即登录</button>
+                <p class="text-center text-sm text-slate-500 mt-8">还没有账号？ <a onclick="switchForm('register')"
+                        class="link-text">立即注册</a></p>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="registerForm" class="hidden-form fade-in" novalidate>
+                <div class="input-group"><input required type="text" id="regUser" class="input"><label
+                        class="user-label">用户名</label></div>
+                <div class="input-group"><input required type="tel" id="regPhone" class="input"><label
+                        class="user-label">手机号</label></div>
+                <div class="input-group">
+                    <input required type="password" id="regPass" class="input"><label class="user-label">设置密码</label>
+                    <div class="password-toggle" onclick="togglePassword('regPass')">
+                        <svg id="eye-regPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L2 2m20 20L14.111 14.111" />
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">创建系统账户</button>
+                <p class="text-center text-sm text-slate-500 mt-8">已有账号？ <a onclick="switchForm('login')"
+                        class="link-text">返回登录</a></p>
+            </form>
+
+            <!-- 找回密码流程 -->
+            <form id="forgotForm" class="hidden-form fade-in" novalidate>
+                <div class="input-group"><input required type="tel" id="forgotPhone" class="input"><label
+                        class="user-label">手机号</label></div>
+                <div id="captchaWrap" class="hidden-form">
+                    <div class="input-group">
+                        <input required type="text" id="captchaCode" class="input"><label class="user-label">验证码</label>
+                        <button type="button" id="captchaBtn" onclick="sendCaptcha()" class="captcha-btn">获取验证码</button>
+                    </div>
+                </div>
+                <button type="button" id="forgotActionBtn" onclick="handleForgot()" class="btn-primary">发送验证码</button>
+                <p class="text-center text-sm text-slate-500 mt-8"><a onclick="switchForm('login')"
+                        class="link-text">返回登录</a></p>
+            </form>
+
+            <!-- 重置密码表单 -->
+            <form id="resetForm" class="hidden-form fade-in" novalidate>
+                <div class="input-group">
+                    <input required type="password" id="newPass" class="input">
+                    <label class="user-label">新密码</label>
+                    <div class="password-toggle" onclick="togglePassword('newPass')">
+                        <svg id="eye-newPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L2 2m20 20L14.111 14.111" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input required type="password" id="confirmNewPass" class="input">
+                    <label class="user-label">确认新密码</label>
+                    <div class="password-toggle" onclick="togglePassword('confirmNewPass')">
+                        <svg id="eye-confirmNewPass" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L2 2m20 20L14.111 14.111" />
+                        </svg>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">确认重置密码</button>
+            </form>
+        </div>
+        <p class="text-center text-xs text-slate-400 mt-8 font-medium">&copy; 2025 毕业论文管理系统</p>
+    </div>
+
+    <script>
+        const forms = {
+            login: document.getElementById('loginForm'),
+            register: document.getElementById('registerForm'),
+            forgot: document.getElementById('forgotForm'),
+            reset: document.getElementById('resetForm')
+        };
+        const statusOverlay = document.getElementById('statusOverlay');
+        const animGroup = document.getElementById('animGroup');
+        const successIcon = document.getElementById('successIcon');
+        const statusMsg = document.getElementById('statusMsg');
+        const topToast = document.getElementById('topToast');
+        const toastText = document.getElementById('toastText');
+
+        const EYE_OPEN = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+        const EYE_CLOSED = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L2 2m20 20L14.111 14.111" />`;
+
+        function showToast(text) {
+            toastText.innerText = text;
+            topToast.classList.add('show');
+            setTimeout(() => topToast.classList.remove('show'), 3000);
+        }
+
+        function showFeedback(text, isSuccess = false, duration = null) {
+            statusOverlay.style.display = 'flex';
+            statusMsg.innerText = text;
+            if (isSuccess) {
+                animGroup.style.display = 'none';
+                successIcon.style.display = 'block';
+            } else {
+                animGroup.style.display = 'block';
+                successIcon.style.display = 'none';
+            }
+            if (duration) setTimeout(() => statusOverlay.style.display = 'none', duration);
+        }
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const eye = document.getElementById('eye-' + id);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.innerHTML = EYE_OPEN;
+            } else {
+                input.type = 'password';
+                eye.innerHTML = EYE_CLOSED;
+            }
+        }
+
+        function switchForm(type) {
+            Object.values(forms).forEach(f => f.classList.add('hidden-form'));
+            forms[type].classList.remove('hidden-form');
+            const titles = {
+                login: '欢迎回来，请登录您的账号',
+                register: '新用户注册系统',
+                forgot: '手机号找回密码',
+                reset: '重置您的账户密码'
+            };
+            document.getElementById('formSubtitle').innerText = titles[type];
+        }
+
+        forms.login.onsubmit = (e) => {
+            e.preventDefault();
+            showFeedback("安全验证中...");
+            // 模拟跳转到管理系统
+            setTimeout(() => {
+                showFeedback("登录成功！正在跳转...", true, 1500);
+                setTimeout(() => window.location.href = 'management_system.html', 1500);
+            }, 1200);
+        };
+
+        forms.register.onsubmit = (e) => {
+            e.preventDefault();
+            showFeedback("正在同步数据...");
+            setTimeout(() => {
+                showFeedback("注册成功，请登录", true, 1500);
+                e.target.reset();
+                setTimeout(() => switchForm('login'), 1500);
+            }, 1000);
+        };
+
+        function sendCaptcha() {
+            const btn = document.getElementById('captchaBtn');
+            btn.disabled = true;
+            showToast("验证码已发送");
+            let count = 60;
+            const timer = setInterval(() => {
+                count--;
+                btn.innerText = count + "s";
+                if (count <= 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.innerText = "获取验证码";
+                }
+            }, 1000);
+        }
+
+        function handleForgot() {
+            const phone = document.getElementById('forgotPhone').value;
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showToast("请输入有效的手机号");
+                return;
+            }
+            const wrap = document.getElementById('captchaWrap');
+            const actionBtn = document.getElementById('forgotActionBtn');
+
+            if (wrap.classList.contains('hidden-form')) {
+                wrap.classList.remove('hidden-form');
+                actionBtn.innerText = '立即验证';
+                sendCaptcha();
+            } else {
+                showFeedback("正在校验验证码...");
+                setTimeout(() => {
+                    statusOverlay.style.display = 'none';
+                    switchForm('reset');
+                }, 800);
+            }
+        }
+
+        forms.reset.onsubmit = (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('newPass').value;
+            const confirm = document.getElementById('confirmNewPass').value;
+            if (pass !== confirm) {
+                showToast("两次输入的密码不一致");
+                return;
+            }
+            showFeedback("正在修改密码...");
+            setTimeout(() => {
+                showFeedback("重置成功，请重新登录", true, 1500);
+                e.target.reset();
+                setTimeout(() => switchForm('login'), 1500);
+            }, 1000);
+        };
+    </script>
+</body>
+
+</html>
