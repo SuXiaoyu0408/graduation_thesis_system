@@ -405,6 +405,20 @@
                         class="link-text">返回登录</a></p>
             </form>
 
+            <!-- 角色选择表单 -->
+            <form id="roleSelectionForm" class="hidden-form fade-in" novalidate>
+                <div class="text-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900">选择角色</h2>
+                    <p class="text-slate-500 text-sm mt-1">请选择您要登录的角色</p>
+                </div>
+                <div id="roleList" class="space-y-3 mb-6">
+                    <!-- 角色列表将动态渲染在此处 -->
+                </div>
+                <button type="submit" class="btn-primary" id="confirmRoleBtn" disabled>确认角色</button>
+                <p class="text-center text-sm text-slate-500 mt-6"><a onclick="switchForm('login')"
+                        class="link-text">返回登录</a></p>
+            </form>
+
             <!-- 重置密码表单 -->
             <form id="resetForm" class="hidden-form fade-in" novalidate>
                 <div class="input-group">
@@ -440,8 +454,40 @@
             login: document.getElementById('loginForm'),
             //register: document.getElementById('registerForm'),
             forgot: document.getElementById('forgotForm'),
-            reset: document.getElementById('resetForm')
+            reset: document.getElementById('resetForm'),
+            roleSelection: document.getElementById('roleSelectionForm')
         };
+        
+        // 临时存储登录信息
+        let tempLoginData = null;
+        // 临时存储找回密码的手机号
+        let forgotPasswordPhone = null;
+        
+        // 页面加载时，检查是否有保存的用户名
+        function loadRememberedCredentials() {
+            const rememberedUsername = localStorage.getItem('rememberedUsername');
+            
+            if (rememberedUsername) {
+                // 只填充用户名，不填充密码（安全考虑）
+                const usernameInput = document.getElementById('loginUser');
+                const rememberCheckbox = document.getElementById('remember');
+                
+                if (usernameInput) {
+                    usernameInput.value = rememberedUsername;
+                }
+                if (rememberCheckbox) {
+                    rememberCheckbox.checked = true;
+                }
+            }
+        }
+        
+        // 页面加载完成后执行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadRememberedCredentials);
+        } else {
+            loadRememberedCredentials();
+        }
+        
         const statusOverlay = document.getElementById('statusOverlay');
         const animGroup = document.getElementById('animGroup');
         const successIcon = document.getElementById('successIcon');
@@ -490,103 +536,430 @@
                 login: '欢迎回来，请登录您的账号',
                 //register: '新用户注册系统',
                 forgot: '手机号找回密码',
-                reset: '重置您的账户密码'
+                reset: '重置您的账户密码',
+                roleSelection: '请选择角色'
             };
             document.getElementById('formSubtitle').innerText = titles[type];
+            
+            // 如果切换到注册表单，重置角色选择
+            if(type === 'register') {
+                resetRoleSelection();
+            }
+            
+            // 如果切换到登录页面，重置忘记密码表单
+            if(type === 'login') {
+                resetForgotPasswordForm();
+            }
+            
+            // 如果切换到忘记密码表单，显示验证码输入框
+            if(type === 'forgot') {
+                const wrap = document.getElementById('captchaWrap');
+                if (wrap) {
+                    wrap.classList.remove('hidden-form');
+                }
+                // 重置按钮文本
+                const actionBtn = document.getElementById('forgotActionBtn');
+                if (actionBtn) {
+                    actionBtn.innerText = '立即验证';
+                }
+            }
+        }
+        
+        // 重置忘记密码表单
+        function resetForgotPasswordForm() {
+            // 清空手机号输入框
+            const phoneInput = document.getElementById('forgotPhone');
+            if (phoneInput) {
+                phoneInput.value = '';
+            }
+            
+            // 清空验证码输入框
+            const codeInput = document.getElementById('captchaCode');
+            if (codeInput) {
+                codeInput.value = '';
+            }
+            
+            // 重置获取验证码按钮
+            const captchaBtn = document.getElementById('captchaBtn');
+            if (captchaBtn) {
+                captchaBtn.disabled = false;
+                captchaBtn.innerText = '获取验证码';
+            }
+            
+            // 重置立即验证按钮文本
+            const actionBtn = document.getElementById('forgotActionBtn');
+            if (actionBtn) {
+                actionBtn.innerText = '立即验证';
+            }
+            
+            // 清空保存的手机号
+            forgotPasswordPhone = null;
         }
 
-        forms.login.onsubmit = (e) => {
+        // 渲染角色选择页面
+        function renderRoleSelection(roles) {
+            const roleList = document.getElementById('roleList');
+            roleList.innerHTML = '';
+            
+            roles.forEach(role => {
+                const roleItem = document.createElement('div');
+                roleItem.className = 'role-item border border-slate-200 rounded-lg p-3 cursor-pointer hover:bg-slate-50 transition-colors';
+                roleItem.innerHTML = `
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="selectedRole" value="${role.roleId}" class="mr-3 role-radio" data-role-code="${role.roleCode}">
+                        <div>
+                            <p class="font-medium text-slate-800">${role.roleName}</p>
+                            <p class="text-xs text-slate-500">${role.roleCode}</p>
+                        </div>
+                    </label>
+                `;
+                
+                // 添加点击事件
+                roleItem.addEventListener('click', function() {
+                    // 取消其他选择
+                    document.querySelectorAll('.role-item').forEach(item => {
+                        item.classList.remove('border-indigo-500', 'bg-indigo-50');
+                    });
+                    
+                    // 选中当前项
+                    this.classList.add('border-indigo-500', 'bg-indigo-50');
+                    const radio = this.querySelector('.role-radio');
+                    radio.checked = true;
+                    
+                    // 启用确认按钮
+                    document.getElementById('confirmRoleBtn').disabled = false;
+                });
+                
+                roleList.appendChild(roleItem);
+            });
+        }
+
+        // 重置角色选择
+        function resetRoleSelection() {
+            document.querySelectorAll('.role-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            document.getElementById('defenseOptions')?.classList.add('hidden');
+        }
+
+        forms.login.onsubmit = async (e) => {
             e.preventDefault();
             const user = document.getElementById('loginUser').value;
             const pass = document.getElementById('loginPass').value;
+            const remember = document.getElementById('remember').checked;
             
-            // 模拟登录验证
-            if(user && pass) {
-                showFeedback("安全验证中...");
-                // 模拟跳转到管理系统
-                setTimeout(() => {
-                    showFeedback("登录成功！正在跳转...", true, 1500);
-                    setTimeout(() => {
-                        // 根据用户角色跳转到不同页面
-                        if(user === 'student123') {
-                            window.location.href = 'management_system.html?role=STUDENT';
-                        } else if(user === 'instructor123') {
-                            window.location.href = 'management_system.html?role=TEACHER';
-                        } else if(user === 'major_responsible123') {
-                            window.location.href = 'management_system.html?role=PRO_LEADER';
-                        } else if(user === 'reviewer123') {
-                            window.location.href = 'management_system.html?role=REVIEWER';
-                        } else if(user === 'college_leader123') {
-                            window.location.href = 'management_system.html?role=DEAN';
-                        } else if(user === 'admin123') {
-                            window.location.href = 'management_system.html?role=ADMIN';
-                        } else if(user === 'defense_member123') {
-                            window.location.href = 'management_system.html?role=DEFENSE_MEMBER';
-                        } else if(user === 'defense_leader123') {
-                            window.location.href = 'management_system.html?role=DEFENSE_CHAIRMAN';
-                        } else {
-                            // 默认跳转到学生页面
-                            window.location.href = 'management_system.html?role=STUDENT';
-                        }
-                    }, 1500);
-                }, 1200);
-            } else {
+            if(!user || !pass) {
                 showToast("请输入用户名和密码");
+                return;
+            }
+            
+            showFeedback("正在登录...");
+            
+            try {
+                // 调用后端登录接口，获取用户角色列表
+                const response = await fetch('http://localhost:8080/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: user,
+                        password: pass
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if(data.code === 200) {
+                    // 处理"记住我"功能
+                    if (remember) {
+                        // 如果选中"记住我"，只保存用户名到localStorage（不存储密码）
+                        localStorage.setItem('rememberedUsername', user);
+                    } else {
+                        // 如果未选中"记住我"，清除保存的用户名
+                        localStorage.removeItem('rememberedUsername');
+                    }
+                    
+                    const roles = data.data.roles;
+                    tempLoginData = {
+                        userId: data.data.userId,
+                        username: data.data.username
+                    };
+                    
+                    if(roles && roles.length > 0) {
+                        // 关闭登录等待遮罩层
+                        statusOverlay.style.display = 'none';
+                        
+                        if(roles.length === 1) {
+                            // 只有一个角色，自动选择该角色
+                            const role = roles[0];
+                            // 修复：确保传递 roleCode，而不是 roleId
+                            await confirmRole(tempLoginData.userId, role.roleCode);
+                        } else {
+                            // 多个角色，显示角色选择页面
+                            renderRoleSelection(roles);
+                            switchForm('roleSelection');
+                        }
+                    } else {
+                        showFeedback("用户未分配角色，请联系管理员", false, 2000);
+                    }
+                } else {
+                    // 登录失败 - 根据API文档处理错误
+                    showFeedback(data.message || "登录失败", false, 2000);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showFeedback("网络错误，请稍后重试", false, 2000);
             }
         };
 
-        function sendCaptcha() {
-            const btn = document.getElementById('captchaBtn');
-            btn.disabled = true;
-            showToast("验证码已发送");
-            let count = 60;
-            const timer = setInterval(() => {
-                count--;
-                btn.innerText = count + "s";
-                if (count <= 0) {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    btn.innerText = "获取验证码";
+        // 角色选择表单提交
+        forms.roleSelection.onsubmit = async (e) => {
+            e.preventDefault();
+
+            // 1. 使用更精确的选择器，确保只在角色列表内部查找
+            const selectedRadio = document.querySelector('#roleList input[name="selectedRole"]:checked');
+            if (!selectedRadio) {
+                showToast("请选择一个角色");
+                return;
+            }
+
+            const roleCode = selectedRadio.dataset.roleCode;
+
+            // 2. 添加调试日志，在提交前打印获取到的角色代码
+            console.log('[RoleSelection Submit] Submitting with roleCode:', roleCode);
+
+            showFeedback("正在确认角色...");
+
+            try {
+                await confirmRole(tempLoginData.userId, roleCode);
+            } catch (error) {
+                console.error('Role selection error:', error);
+                showFeedback("确认角色失败，请重试", false, 2000);
+            }
+        };
+
+        // 确认角色并获取JWT token
+        async function confirmRole(userId, roleCode) {
+            try {
+                const response = await fetch('http://localhost:8080/login/confirm-role', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        roleCode: roleCode
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if(data.code === 200) {
+                    // 登录成功，保存JWT token和用户信息（从后端响应中获取）
+                    // 清理token中的非法字符（JWT字符串只能包含Base64URL字符）
+                    let token = (data.data.token || '').toString();
+                    
+                    // 去除首尾空白字符
+                    token = token.trim();
+                    
+                    // 移除所有控制字符（ASCII 0-31）和删除字符（127）
+                    token = token.replace(/[\x00-\x1F\x7F]/g, '');
+                    
+                    // 移除所有空白字符
+                    token = token.replace(/\s+/g, '');
+                    
+                    // 只保留Base64URL字符和点号
+                    token = token.replace(/[^A-Za-z0-9\-_.]/g, '');
+                    
+                    // 验证 token 不为空
+                    if (!token) {
+                        showFeedback('登录失败：Token 无效', 'error');
+                        return;
+                    }
+                    
+                    const username = data.data.username;
+                    const roleCode = data.data.roleCode;
+                    
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userId', data.data.userId);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('roleId', data.data.roleId);
+                    localStorage.setItem('roleCode', roleCode);
+                    
+                    // 关闭加载动画
+                    statusOverlay.style.display = 'none';
+                    // 显示登录成功提示（使用顶部Toast，与其他提示一致）
+                    showFeedback("登录成功！正在跳转...");
+                    
+                    // 根据角色代码跳转到相应页面
+                    setTimeout(() => {
+                        window.location.href = `management_system.html?role=${roleCode}`;
+                    }, 500);
+                } else {
+                    showFeedback(data.message || "确认角色失败", false, 2000);
                 }
-            }, 1000);
+            } catch (error) {
+                console.error('Confirm role error:', error);
+                showFeedback("网络错误，请稍后重试", false, 2000);
+            }
         }
 
-        function handleForgot() {
+        // 发送验证码
+        async function sendCaptcha() {
+            const phone = document.getElementById('forgotPhone').value;
+            
+            // 校验手机号格式
+            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+                showToast("请输入有效的手机号");
+                return;
+            }
+            
+            const btn = document.getElementById('captchaBtn');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:8080/password/sms-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    showToast("验证码已发送");
+                    // 开始倒计时
+                    let count = 60;
+                    const timer = setInterval(() => {
+                        count--;
+                        btn.innerText = count + "s";
+                        if (count <= 0) {
+                            clearInterval(timer);
+                            btn.disabled = false;
+                            btn.innerText = "获取验证码";
+                        }
+                    }, 1000);
+                } else {
+                    showToast(data.message || "发送验证码失败");
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Send captcha error:', error);
+                showToast("网络错误，请稍后重试");
+                btn.disabled = false;
+            }
+        }
+
+        async function handleForgot() {
             const phone = document.getElementById('forgotPhone').value;
             if (!/^1[3-9]\d{9}$/.test(phone)) {
                 showToast("请输入有效的手机号");
                 return;
             }
-            const wrap = document.getElementById('captchaWrap');
-            const actionBtn = document.getElementById('forgotActionBtn');
-
-            if (wrap.classList.contains('hidden-form')) {
-                wrap.classList.remove('hidden-form');
-                actionBtn.innerText = '立即验证';
-                sendCaptcha();
-            } else {
-                showFeedback("正在校验验证码...");
-                setTimeout(() => {
+            
+            // 校验验证码
+            const code = document.getElementById('captchaCode').value;
+            if (!code || code.trim() === '') {
+                showToast("请输入验证码");
+                return;
+            }
+            
+            showFeedback("正在校验验证码...");
+            
+            try {
+                const response = await fetch('http://localhost:8080/password/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        code: code
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    // 保存手机号，用于重置密码
+                    forgotPasswordPhone = phone;
+                    // 关闭加载动画
                     statusOverlay.style.display = 'none';
+                    // 跳转到重置密码页面
                     switchForm('reset');
-                }, 800);
+                } else {
+                    showFeedback(data.message || "校验验证码失败", false, 2000);
+                }
+            } catch (error) {
+                console.error('Verify code error:', error);
+                showFeedback("网络错误，请稍后重试", false, 2000);
             }
         }
 
-        forms.reset.onsubmit = (e) => {
+        forms.reset.onsubmit = async (e) => {
             e.preventDefault();
             const pass = document.getElementById('newPass').value;
             const confirm = document.getElementById('confirmNewPass').value;
+            
+            // 前端基础校验
+            if (!pass || !confirm) {
+                showToast("请输入新密码和确认密码");
+                return;
+            }
+            
             if (pass !== confirm) {
                 showToast("两次输入的密码不一致");
                 return;
             }
+            
+            // 检查是否有保存的手机号
+            if (!forgotPasswordPhone) {
+                showToast("请先完成验证码校验");
+                return;
+            }
+            
             showFeedback("正在修改密码...");
-            setTimeout(() => {
-                showFeedback("重置成功，请重新登录", true, 1500);
-                e.target.reset();
-                setTimeout(() => switchForm('login'), 1500);
-            }, 1000);
+            
+            try {
+                const response = await fetch('http://localhost:8080/password/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: forgotPasswordPhone,
+                        newPassword: pass,
+                        confirmPassword: confirm
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    // 关闭加载动画
+                    statusOverlay.style.display = 'none';
+                    // 显示成功提示
+                    showToast("密码重置成功，请重新登录");
+                    // 清空表单
+                    e.target.reset();
+                    // 清空保存的手机号
+                    forgotPasswordPhone = null;
+                    // 延迟跳转到登录页面
+                    setTimeout(() => {
+                        switchForm('login');
+                    }, 1500);
+                } else {
+                    showFeedback(data.message || "重置密码失败", false, 2000);
+                }
+            } catch (error) {
+                console.error('Reset password error:', error);
+                showFeedback("网络错误，请稍后重试", false, 2000);
+            }
         };
     </script>
 </body>

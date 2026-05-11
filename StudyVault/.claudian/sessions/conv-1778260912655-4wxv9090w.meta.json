@@ -1,0 +1,23 @@
+{
+  "id": "conv-1778260912655-4wxv9090w",
+  "providerId": "claude",
+  "title": "Greet in Chinese",
+  "titleGenerationStatus": "success",
+  "createdAt": 1778260912656,
+  "updatedAt": 1778260953357,
+  "lastResponseAt": 1778260915788,
+  "sessionId": "6a2f91bd-a32c-4865-8fc2-9c3f58bb5f3f",
+  "providerState": {
+    "providerSessionId": "6a2f91bd-a32c-4865-8fc2-9c3f58bb5f3f"
+  },
+  "usage": {
+    "model": "haiku",
+    "inputTokens": 21273,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 0,
+    "contextWindow": 200000,
+    "contextTokens": 21273,
+    "percentage": 11,
+    "contextWindowIsAuthoritative": true
+  }
+}
