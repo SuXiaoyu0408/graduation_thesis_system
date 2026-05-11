@@ -39,3 +39,6 @@ uploads/
 CLAUDE.md
 StudyVault/
 markdown/
+mvnw
+mvnw.cmd
+*.log
