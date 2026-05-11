@@ -555,7 +555,7 @@ async function previewStudentMaterial(processId, materialType) {
 }
 
 // 下载学生材料
-async function downloadStudentMaterial(processId, materialType) {
+async function downloadStudentMaterial(processId, materialType, knownFilename) {
     // 确保processId是数字类型
     const processIdNum = parseInt(processId, 10);
     if (!processIdNum || isNaN(processIdNum)) {
@@ -571,13 +571,36 @@ async function downloadStudentMaterial(processId, materialType) {
                 'Authorization': `Bearer ${cleanToken}`
             }
         });
-        
+
         if (response.ok) {
+            // 确定文件名优先级：传入的原始文件名 > Content-Disposition头 > 默认名
+            let filename = knownFilename || null;
+
+            if (!filename) {
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition) {
+                    const utf8FilenameMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
+                    if (utf8FilenameMatch && utf8FilenameMatch[1]) {
+                        filename = decodeURIComponent(utf8FilenameMatch[1]);
+                    } else {
+                        const asciiFilenameMatch = disposition.match(/filename="([^"]+)"/);
+                        if (asciiFilenameMatch && asciiFilenameMatch[1]) {
+                            filename = asciiFilenameMatch[1];
+                        }
+                    }
+                }
+            }
+
+            if (!filename) {
+                filename = `${materialType}_${processId}.tmp`;
+            }
+
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
+            a.style.display = 'none';
             a.href = downloadUrl;
-            a.download = `${materialType}_${processId}`;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

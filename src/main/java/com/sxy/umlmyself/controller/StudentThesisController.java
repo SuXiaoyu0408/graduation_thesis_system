@@ -75,6 +75,12 @@ public class StudentThesisController {
         return ApiResponse.success(process);
     }
 
+    @DeleteMapping("/material/history/{historyId}")
+    public ApiResponse<?> deleteHistoryRecord(@PathVariable Long historyId) {
+        studentThesisService.deleteHistoryRecord(historyId);
+        return ApiResponse.success("历史记录已删除");
+    }
+
     @GetMapping("/defense/{processId}/arrangement")
     public ApiResponse<DefenseArrangementDTO> getDefenseArrangement(@PathVariable Long processId) {
         DefenseArrangementDTO arrangement = studentThesisService.getDefenseArrangement(processId);

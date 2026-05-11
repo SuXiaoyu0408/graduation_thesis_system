@@ -63,7 +63,8 @@ function renderMyTopicPage() {
                                 <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
-                            <button onclick="downloadHistoryFile(${file.historyId})" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='event.stopPropagation();deleteHistoryFile(${file.historyId}, async () => { await loadUserData(); renderMyTopicPage(); })' class="text-rose-500 hover:text-rose-700 text-sm font-bold ml-3"><i class="fas fa-trash-alt mr-1"></i>删除</button>
                         </div>
                     `).join('') : '<p class="text-slate-400 text-sm text-center py-4 italic">暂无历史提交记录</p>'}
                 </div>
@@ -222,7 +223,8 @@ function renderProposalPage() {
                                 <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
-                            <button onclick="downloadHistoryFile(${file.historyId})" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='event.stopPropagation();deleteHistoryFile(${file.historyId}, async () => { await loadUserData(); renderProposalPage(); })' class="text-rose-500 hover:text-rose-700 text-sm font-bold ml-3"><i class="fas fa-trash-alt mr-1"></i>删除</button>
                         </div>
                     `).join('') : '<p class="text-slate-400 text-sm text-center py-4 italic">暂无历史提交记录</p>'}
                 </div>
@@ -347,7 +349,8 @@ function renderMidtermPage() {
                                 <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
-                            <button onclick="downloadHistoryFile(${file.historyId})" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='event.stopPropagation();deleteHistoryFile(${file.historyId}, async () => { await loadUserData(); renderMidtermPage(); })' class="text-rose-500 hover:text-rose-700 text-sm font-bold ml-3"><i class="fas fa-trash-alt mr-1"></i>删除</button>
                         </div>
                     `).join('') : '<p class="text-slate-400 text-sm text-center py-4 italic">暂无历史提交记录</p>'}
                 </div>
@@ -422,7 +425,7 @@ function renderMidtermPage() {
 }
 
 // 下载历史文件
-async function downloadHistoryFile(historyId) {
+async function downloadHistoryFile(historyId, knownFilename) {
     mockAction('正在准备下载...');
     try {
         const url = `${API_BASE_URL}/api/student/thesis/material/history/${historyId}/download`;
@@ -438,22 +441,26 @@ async function downloadHistoryFile(historyId) {
             throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
-        // 从Content-Disposition头中提取文件名，采用更健壮的方式
-        const disposition = response.headers.get('Content-Disposition');
-        let filename = `文件_${historyId}.tmp`; // 默认文件名
+        // 确定文件名优先级：传入的原始文件名 > Content-Disposition头 > 默认名
+        let filename = knownFilename || null;
 
-        if (disposition) {
-            // 优先匹配 filename* (RFC 5987 格式，处理非ASCII字符)
-            const utf8FilenameMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
-            if (utf8FilenameMatch && utf8FilenameMatch[1]) {
-                filename = decodeURIComponent(utf8FilenameMatch[1]);
-            } else {
-                // 回退到匹配常规的 filename
-                const asciiFilenameMatch = disposition.match(/filename="([^"]+)"/);
-                if (asciiFilenameMatch && asciiFilenameMatch[1]) {
-                    filename = asciiFilenameMatch[1];
+        if (!filename) {
+            const disposition = response.headers.get('Content-Disposition');
+            if (disposition) {
+                const utf8FilenameMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
+                if (utf8FilenameMatch && utf8FilenameMatch[1]) {
+                    filename = decodeURIComponent(utf8FilenameMatch[1]);
+                } else {
+                    const asciiFilenameMatch = disposition.match(/filename="([^"]+)"/);
+                    if (asciiFilenameMatch && asciiFilenameMatch[1]) {
+                        filename = asciiFilenameMatch[1];
+                    }
                 }
             }
+        }
+
+        if (!filename) {
+            filename = `文件_${historyId}.tmp`;
         }
 
         const blob = await response.blob();
@@ -525,7 +532,8 @@ function renderThesisPage() {
                                 <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
-                            <button onclick="downloadHistoryFile(${file.historyId})" class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
+                            <button onclick='event.stopPropagation();deleteHistoryFile(${file.historyId}, async () => { await loadUserData(); renderThesisPage(); })' class="text-rose-500 hover:text-rose-700 text-sm font-bold ml-3"><i class="fas fa-trash-alt mr-1"></i>删除</button>
                         </div>
                     `).join('') : '<p class="text-slate-400 text-sm text-center py-4 italic">暂无历史提交记录</p>'}
                 </div>

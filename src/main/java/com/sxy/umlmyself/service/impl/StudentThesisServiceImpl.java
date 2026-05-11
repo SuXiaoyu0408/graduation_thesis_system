@@ -159,6 +159,27 @@ public class StudentThesisServiceImpl implements StudentThesisService {
     }
 
     @Override
+    @Transactional
+    public void deleteHistoryRecord(Long historyId) {
+        MaterialHistory history = historyRepo.findById(historyId)
+                .orElseThrow(() -> new BusinessException("历史记录不存在"));
+        validateStudentAccess(history.getProcessId());
+
+        if (Boolean.TRUE.equals(history.getLatest())) {
+            List<MaterialHistory> histories = historyRepo
+                    .findByProcessIdAndMaterialTypeOrderByVersionDesc(history.getProcessId(), history.getMaterialType());
+            if (histories.size() > 1) {
+                MaterialHistory previous = histories.get(1);
+                previous.setLatest(true);
+                historyRepo.save(previous);
+            }
+        }
+
+        fileService.deleteFile(history.getFilePath());
+        historyRepo.delete(history);
+    }
+
+    @Override
     public String getRejectedReason(Long processId, MaterialType materialType) {
         validateStudentAccess(processId);
         return historyRepo

@@ -28,7 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -135,7 +137,7 @@ public class ReviewerThesisServiceImpl implements ReviewerThesisService {
     }
 
     @Override
-    public Resource downloadStudentMaterial(Long processId, MaterialType materialType, String token) {
+    public Map<String, Object> downloadStudentMaterial(Long processId, MaterialType materialType, String token) {
         Integer reviewerId = jwtUtil.getUserIdFromToken(token);
         validateReviewerAccess(processId, reviewerId);
 
@@ -154,7 +156,11 @@ public class ReviewerThesisServiceImpl implements ReviewerThesisService {
                 .orElseThrow(() -> new BusinessException("未找到材料"));
 
         try {
-            return fileService.downloadFile(latest.getFilePath());
+            Resource resource = fileService.downloadFile(latest.getFilePath());
+            Map<String, Object> result = new HashMap<>();
+            result.put("resource", resource);
+            result.put("filename", latest.getOriginalFilename());
+            return result;
         } catch (IOException e) {
             throw new BusinessException("文件下载失败: " + e.getMessage());
         }

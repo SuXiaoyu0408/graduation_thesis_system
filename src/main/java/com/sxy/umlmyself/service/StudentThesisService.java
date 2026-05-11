@@ -22,4 +22,6 @@ public interface StudentThesisService {
     ThesisProcessDTO getMyThesisProcess();
 
     DefenseArrangementDTO getDefenseArrangement(Long processId);
+
+    void deleteHistoryRecord(Long historyId);
 }

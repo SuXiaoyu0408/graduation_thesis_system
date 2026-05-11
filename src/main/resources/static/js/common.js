@@ -1,5 +1,20 @@
 // =================== Common Renderers (Shared) ===================
 
+async function deleteHistoryFile(historyId, onSuccess) {
+    if (!confirm('确定要删除这条历史记录吗？删除后不可恢复。')) return;
+    try {
+        await fetchWithAuth(`/api/student/thesis/material/history/${historyId}`, { method: 'DELETE' });
+        mockAction('删除成功');
+        if (onSuccess) {
+            onSuccess();
+        } else {
+            renderHistoryPage();
+        }
+    } catch (error) {
+        mockAction(`删除失败: ${error.message}`);
+    }
+}
+
 async function renderHistoryPage() {
     const container = document.getElementById('contentArea');
     container.innerHTML = '<div class="card p-8"><h3 class="text-xl font-bold text-slate-900 mb-6">历史记录</h3><p class="text-slate-400 text-center py-8">正在加载历史记录...</p></div>';
@@ -38,7 +53,7 @@ async function renderHistoryPage() {
         if (history.length === 0) {
             container.innerHTML = '<div class="card p-8"><h3 class="text-xl font-bold text-slate-900 mb-6">历史记录</h3><p class="text-slate-400 text-center py-8">暂无历史记录</p></div>';
         } else {
-            container.innerHTML = `<div class="card p-8"><h3 class="text-xl font-bold text-slate-900 mb-6">历史记录</h3><table class="w-full text-left text-sm"><thead><tr class="border-b text-slate-500"><th class="py-3">人员</th><th>材料类型</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${history.map(h=>`<tr class="border-b last:border-0"><td class="py-3 font-medium">${h.name || h.uploaderName || '未知'}</td><td>${h.material || h.materialType || '未知'}</td><td>${h.time || h.uploadedAt || '未知'}</td><td>${getChip(h.status || h.isLatest)}</td><td class="py-2"><button class='text-xs px-2 py-1 border rounded hover:bg-slate-50' onclick='downloadHistoryFile(${h.historyId})'>下载</button></td></tr>`).join('')}</tbody></table></div>`;
+            container.innerHTML = `<div class="card p-8"><h3 class="text-xl font-bold text-slate-900 mb-6">历史记录</h3><table class="w-full text-left text-sm"><thead><tr class="border-b text-slate-500"><th class="py-3">人员</th><th>材料类型</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${history.map(h=>`<tr class="border-b last:border-0"><td class="py-3 font-medium">${h.name || h.uploaderName || '未知'}</td><td>${h.material || h.materialType || '未知'}</td><td>${h.time || h.uploadedAt || '未知'}</td><td>${getChip(h.status || h.isLatest)}</td><td class="py-2"><button class='text-xs px-2 py-1 border rounded hover:bg-slate-50' onclick='downloadHistoryFile(${h.historyId}, ${JSON.stringify(h.originalFilename || '')})'>下载</button><button class='text-xs px-2 py-1 border rounded hover:bg-red-50 text-red-500 ml-1' onclick='event.stopPropagation();deleteHistoryFile(${h.historyId})'>删除</button></td></tr>`).join('')}</tbody></table></div>`;
         }
     } catch (error) {
         console.error('Failed to load history:', error);

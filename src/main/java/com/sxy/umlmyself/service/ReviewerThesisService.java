@@ -8,6 +8,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ReviewerThesisService {
 
@@ -17,7 +18,7 @@ public interface ReviewerThesisService {
 
     Resource previewStudentMaterial(Long processId, MaterialType materialType, String token);
 
-    Resource downloadStudentMaterial(Long processId, MaterialType materialType, String token);
+    Map<String, Object> downloadStudentMaterial(Long processId, MaterialType materialType, String token);
 
     List<ReviewerPaperDTO> getPapersForReview(String token);
 

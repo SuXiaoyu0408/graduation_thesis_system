@@ -10,13 +10,16 @@ import com.sxy.umlmyself.service.ReviewerThesisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviewer/thesis")
@@ -71,10 +74,17 @@ public class ReviewerThesisController {
             @PathVariable MaterialType materialType,
             @RequestHeader("Authorization") String token) {
         try {
-            Resource resource = reviewerThesisService.downloadStudentMaterial(processId, materialType, token);
+            Map<String, Object> result = reviewerThesisService.downloadStudentMaterial(processId, materialType, token);
+            Resource resource = (Resource) result.get("resource");
+            String originalFilename = (String) result.get("filename");
+
+            ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
+                    .filename(originalFilename, StandardCharsets.UTF_8)
+                    .build();
+
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                     .body(resource);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
