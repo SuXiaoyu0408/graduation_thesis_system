@@ -350,9 +350,9 @@ async function renderReviewerGradingPage(data = {}) {
                 <div class="space-y-3">
                     ${documents.map(doc => `
                         <div class="p-3 bg-slate-50 rounded-lg flex items-center justify-between hover:bg-slate-100">
-                            <div class="flex items-center gap-3">
-                                <i class="fas ${doc.icon} text-indigo-500"></i>
-                                <span class="text-sm font-medium text-slate-700">${doc.name}</span>
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <i class="fas ${doc.icon} text-indigo-500 flex-shrink-0"></i>
+                                <span class="text-sm font-medium text-slate-700 truncate">${doc.name}</span>
                             </div>
                             <div>
                                 <button onclick="previewStudentMaterial(${doc.processId}, '${doc.type}')" class="text-slate-400 hover:text-indigo-600 w-6 h-6"><i class="fas fa-eye"></i></button>

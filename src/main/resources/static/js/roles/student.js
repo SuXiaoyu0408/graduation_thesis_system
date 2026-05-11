@@ -59,8 +59,8 @@ function renderMyTopicPage() {
                 <div id="history-list" class="space-y-1">
                     ${(myTopicData.history && myTopicData.history.length > 0) ? myTopicData.history.map(file => `
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-slate-700 truncate">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
                             <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
@@ -219,8 +219,8 @@ function renderProposalPage() {
                 <div class="space-y-1">
                     ${(myProposalData.history && myProposalData.history.length > 0) ? myProposalData.history.map(file => `
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-slate-700 truncate">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
                             <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
@@ -345,8 +345,8 @@ function renderMidtermPage() {
                 <div class="space-y-1">
                     ${(myMidtermData.history && myMidtermData.history.length > 0) ? myMidtermData.history.map(file => `
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-slate-700 truncate">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
                             <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
@@ -528,8 +528,8 @@ function renderThesisPage() {
                 <div class="space-y-1">
                     ${(myThesisData.history && myThesisData.history.length > 0) ? myThesisData.history.map(file => `
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${file.originalFilename}</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-slate-700 truncate">${file.originalFilename}</p>
                                 <p class="text-xs text-slate-400">${file.time} · ${file.size}</p>
                             </div>
                             <button onclick='downloadHistoryFile(${file.historyId}, ${JSON.stringify(file.originalFilename || '')})' class="text-indigo-600 hover:text-indigo-800 text-sm font-bold"><i class="fas fa-download mr-1"></i>下载</button>
